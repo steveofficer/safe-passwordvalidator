@@ -17,15 +17,19 @@ open System.Net.Http.Headers
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
-type Model = { Password: Password option; ServerError: string option }
+type Notification = 
+    | Error of string
+    | Warning of string
+    | Message of string
+type Model = { Password: Password option; Notification: Notification option }
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
 type Msg =
 | ChangePassword of string
 | SavePassword
-| ShowServerError of string
-| HideServerError
+| ShowNotification of Notification
+| HideNotification
 
 let savePassword (password: string) = promise {
     let! response = 
@@ -43,7 +47,7 @@ let savePassword (password: string) = promise {
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Password = None; ServerError = None }
+    let initialModel = { Password = None; Notification = None }
     initialModel, Cmd.none
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
@@ -59,22 +63,29 @@ let update (``validation result``) (msg : Msg) (currentModel : Model) : Model * 
     
     | SavePassword ->
         match currentModel.Password with
-        | None -> { currentModel with ServerError = Some "No password has been entered" }, Cmd.none
+        | None -> { currentModel with Notification = "No password has been entered" |> Warning |> Some }, Cmd.none
         | Some password ->
             match password with
             | ValidPassword password -> 
                 let cmd = 
                     Cmd.OfPromise.either
                         savePassword password
-                        (fun () -> ShowServerError "Saved")
-                        (fun err -> ShowServerError err.Message)
+                        (fun () -> "Saved" |> Message |> ShowNotification)
+                        (fun err -> err.Message |> Error |> ShowNotification)
                 currentModel, cmd
             | InvalidPassword (password, _) -> 
-                { currentModel with ServerError = Some "An invalid password cannot be saved" }, Cmd.none
+                //{ currentModel with Notification = "An invalid password cannot be saved" |> Warning |> Some }, Cmd.none
+                let cmd = 
+                    Cmd.OfPromise.either
+                        savePassword password
+                        (fun () -> "Saved" |> Message |> ShowNotification)
+                        (fun err -> 
+                            err.Message |> Error |> ShowNotification)
+                currentModel, cmd
 
-    | ShowServerError error -> { currentModel with ServerError = Some error }, Cmd.none
+    | ShowNotification notification -> { currentModel with Notification = Some notification }, Cmd.none
     
-    | HideServerError -> { currentModel with ServerError = None }, Cmd.none
+    | HideNotification -> { currentModel with Notification = None }, Cmd.none
 
 let view (model : Model) (dispatch : Msg -> unit) =
     let ``policy result`` (policy: PolicyResult) =
@@ -90,10 +101,16 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
     let ``show error`` dispatch = function
         | None -> null
-        | Some e ->
-            Notification.notification [ Notification.CustomClass("is-warning") ] [
-                Notification.delete [ GenericOption.Props [ OnClick (fun _ -> HideServerError |> dispatch) ]] []
-                str e
+        | Some notification ->
+            let (t, message) = 
+                match notification with
+                | Error e -> "is-danger", e
+                | Warning e -> "is-warning", e
+                | Message m -> "is-success", m
+            
+            Notification.notification [ Notification.CustomClass t ] [
+                Notification.delete [ GenericOption.Props [ OnClick (fun _ -> HideNotification |> dispatch) ]] []
+                str message
             ]
 
     let ``show details`` password =
@@ -109,7 +126,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
         ]                
     
     Container.container [] [
-        ``show error`` dispatch model.ServerError
+        ``show error`` dispatch model.Notification
 
         Heading.h3 [] [ str "Password Validator" ]
 
