@@ -1,8 +1,8 @@
 namespace Shared
 
-type PasswordRule = {
+type PasswordPolicy = {
     Name: string
-    IsValid: string -> bool
+    IsValid: string -> Result<unit, string>
 }
 
 type Password = 
@@ -10,21 +10,39 @@ type Password =
     | InvalidPassword of string * PolicyResult list
 and PolicyResult = {
     Name: string
-    IsSuccess: bool
+    Result: Result<unit, string>
 }
 
 type Validator() =
-    let ``minimum length of`` length (password: string) = password.Length >= length
-    let ``maximum length of`` length (password: string) = password.Length <= length
-    let ``has one of`` (set: char Set) (password: string) = password |> Seq.exists set.Contains
-    let ``does not have one of`` (set: char Set) = (``has one of`` set) >> not
+    let ``minimum length of`` length (password: string) =
+        if password.Length >= length
+        then Ok()
+        else Error (sprintf "%d is shorter than %d" password.Length length)
+
+    let ``maximum length of`` length (password: string) = 
+        if password.Length <= length
+        then Ok()
+        else Error (sprintf "%d is longer than %d" password.Length length)
+
+    let ``has one of`` (set: char Set) (password: string) = 
+        if password |> Seq.exists set.Contains
+        then Ok()
+        else Error (sprintf "Expected one of %A" set)
+
+    let ``does not have one of`` (set: char Set) (password: string) = 
+        match (``has one of`` set password) with
+        | Ok () -> Error (sprintf "Cannot contain any of %A" set)
+        | Error _ -> Ok()
     
-    let ``run rule against`` (password: string) (rule: PasswordRule) = { Name = rule.Name; IsSuccess = rule.IsValid password }
+    let ``run rule against`` (password: string) (rule: PasswordPolicy) = 
+        { Name = rule.Name; Result = rule.IsValid password }
     
     let ``has any`` = List.exists
     let (>>?) p f = p |> List.exists f
 
-    let ``failed policies`` (rule: PolicyResult) = rule.IsSuccess |> not
+    let ``failed policies`` = function 
+        | { Name = _ ; Result = Ok() } -> false 
+        | { Name = _ ; Result = Error _ } -> true 
 
     let rules = [
         { 
@@ -48,8 +66,8 @@ type Validator() =
             IsValid = [ 'A'..'Z' ] |> Set.ofList |> ``has one of`` 
         }
         {
-            Name = "Does not have banned character"
-            IsValid = [ '*'; ''' ] |> Set.ofList |> ``does not have one of`` 
+            Name = "Does not have a banned character"
+            IsValid = [ '*'; '''; '@' ] |> Set.ofList |> ``does not have one of`` 
         }
     ]    
 
