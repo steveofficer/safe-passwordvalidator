@@ -1,5 +1,5 @@
 module Client
-
+open System
 open Elmish
 open Elmish.React
 open Fable.Core.JsInterop
@@ -11,21 +11,22 @@ open Shared
 open Types
 open ViewComponents
 
-// This function is used to communicate the Web Server backend
-// by using the browser's `fetch` api
+// This function is used to communicate the Web Server backend by using the browser's `fetch` api
 let savePassword (password: string) = promise {
-    let! response = 
+    let! _ = 
         Fetch.fetch 
             "/api/save" 
             [ RequestProperties.Method(Fetch.Types.HttpMethod.POST); RequestProperties.Body(!^(sprintf "\"%s\"" password)) ] 
     return ()
 }
-    
+
+let getServerInfo() = Thoth.Fetch.Fetch.fetchAs<ServerInfo> "/api/info" 
 
 // defines the initial state and initial command (a.k.a side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Password = None; Notification = None }
-    initialModel, Cmd.none
+    let initialModel = { Password = None; Notification = None; ServerInfo = { Version = "??"; Time = DateTimeOffset.MinValue } }
+    let initialCommand = Cmd.OfPromise.perform getServerInfo () SetServerInfo
+    initialModel, initialCommand
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -51,17 +52,19 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
                         (fun _ -> "The server rejected the password" |> Error |> ShowNotification)
                 currentModel, cmd
             | InvalidPassword (password, _) -> 
-                { currentModel with Notification = "An invalid password cannot be saved" |> Warning |> Some }, Cmd.none
-                // let cmd = 
-                //     Cmd.OfPromise.either
-                //         savePassword password
-                //         (fun () -> "Saved" |> Message |> ShowNotification)
-                //         (fun _ -> "The server rejected the password" |> Error |> ShowNotification)
-                //currentModel, cmd
+                //{ currentModel with Notification = "An invalid password cannot be saved" |> Warning |> Some }, Cmd.none
+                let cmd = 
+                     Cmd.OfPromise.either
+                         savePassword password
+                         (fun () -> "Saved" |> Message |> ShowNotification)
+                         (fun _ -> "The server rejected the password" |> Error |> ShowNotification)
+                currentModel, cmd
 
     | ShowNotification notification -> { currentModel with Notification = Some notification }, Cmd.none
     
     | HideNotification -> { currentModel with Notification = None }, Cmd.none
+
+    | SetServerInfo info -> { currentModel with ServerInfo = info }, Cmd.none
 
 // This defines the visual elements that are rendered to the screen
 // The elements that get displayed as well as the values are based on the applicatio's Model
@@ -83,6 +86,11 @@ let view (model : Model) (dispatch : Msg -> unit) =
         ]
 
         ``password status`` model.Password
+
+        Footer.footer [] [
+            p [] [ str model.ServerInfo.Version ]
+            p [] [ model.ServerInfo.Time.ToString() |> str ]
+        ]
     ]
 
 // This start the application

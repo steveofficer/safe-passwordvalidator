@@ -6,6 +6,7 @@ open Shared
 type Model = { 
     Password: Password option 
     Notification: Notification option 
+    ServerInfo: ServerInfo
 }
 and Notification = 
     | Error of string
@@ -19,3 +20,4 @@ type Msg =
 | SavePassword
 | ShowNotification of Notification
 | HideNotification
+| SetServerInfo of ServerInfo

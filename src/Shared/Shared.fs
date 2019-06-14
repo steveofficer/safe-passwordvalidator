@@ -1,5 +1,12 @@
 namespace Shared
 
+open System
+
+type ServerInfo = {
+    Version: string
+    Time: DateTimeOffset
+}
+
 type PasswordPolicy = {
     Name: string
     IsValid: string -> Result<unit, string>
