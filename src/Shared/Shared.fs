@@ -62,19 +62,19 @@ type Validator() =
         }
         {
             Name = "Has a special character"
-            IsValid = [ '%'; '$'; '!'; '&'; '_' ] |> Set.ofList |> ``has one of`` 
+            IsValid = ``has one of`` <| set [ '%'; '$'; '!'; '&'; '_' ]
         }
         {
             Name = "Has a number"
-            IsValid = [ '0'..'9' ] |> Set.ofList |> ``has one of`` 
+            IsValid = ``has one of`` <| set [ '0'..'9' ] 
         }
         {
             Name = "Has an uppercase Alpha"
-            IsValid = [ 'A'..'Z' ] |> Set.ofList |> ``has one of`` 
+            IsValid = ``has one of`` <| set [ 'A'..'Z' ] 
         }
         {
             Name = "Does not have a banned character"
-            IsValid = [ '*'; '''; '@' ] |> Set.ofList |> ``does not have one of`` 
+            IsValid = ``does not have one of`` <| set [ '*'; '''; '@' ]
         }
     ]    
 
