@@ -2,14 +2,16 @@ namespace Shared
 
 open System
 
+type ErrorMessage = string
+
 type ServerInfo = {
     Version: string
     Time: DateTimeOffset
 }
 
-type PasswordPolicy = {
+type Policy = {
     Name: string
-    IsValid: string -> Result<unit, string>
+    IsValid: string -> Result<unit, ErrorMessage>
 }
 
 type Password = 
@@ -17,7 +19,7 @@ type Password =
     | InvalidPassword of string * PolicyResult list
 and PolicyResult = {
     Name: string
-    Result: Result<unit, string>
+    Result: Result<unit, ErrorMessage>
 }
 
 type Validator() =
@@ -31,25 +33,27 @@ type Validator() =
         then Ok()
         else Error (sprintf "%d is longer than %d" password.Length length)
 
-    let ``has one of`` (set: char Set) (password: string) = 
-        if password |> Seq.exists set.Contains
+    let ``has one of`` (chars: char Set) (password: string) = 
+        if password |> Seq.exists chars.Contains
         then Ok()
-        else Error (sprintf "Expected one of %A" set)
+        else Error (sprintf "Expected one of %A" chars)
 
-    let ``does not have one of`` (set: char Set) (password: string) = 
-        match (``has one of`` set password) with
-        | Ok () -> Error (sprintf "Cannot contain any of %A" set)
+    let ``does not have one of`` (chars: char Set) (password: string) = 
+        match (``has one of`` chars password) with
+        | Ok() -> Error (sprintf "Cannot contain any of %A" chars)
         | Error _ -> Ok()
     
-    let ``run rule against`` (password: string) (rule: PasswordPolicy) = 
-        { Name = rule.Name; Result = rule.IsValid password }
+    let ``run against`` (password: string) (rules: Policy list) = 
+        rules |> List.map (fun rule -> { Name = rule.Name; Result = rule.IsValid password })
     
-    let ``has any`` = List.exists
-    let (>>?) p f = p |> List.exists f
-
     let ``failed policies`` = function 
         | { Name = _ ; Result = Ok() } -> false 
         | { Name = _ ; Result = Error _ } -> true 
+
+    let (|FailuresFound|AllPassed|) results = 
+        if results |> List.exists ``failed policies``
+        then FailuresFound results
+        else AllPassed
 
     let rules = [
         { 
@@ -78,12 +82,7 @@ type Validator() =
         }
     ]    
 
-    member this.Validate (password) =
-        let policies = 
-            rules 
-            |> List.map (``run rule against`` password)
-
-        //if policies >>? ``failed policies``
-        if policies |> ``has any`` ``failed policies``
-        then InvalidPassword (password, policies)
-        else ValidPassword password
+    member this.Validate (password: string) =
+        match rules |> ``run against`` password with
+        | FailuresFound results -> InvalidPassword (password, results)
+        | AllPassed -> ValidPassword password

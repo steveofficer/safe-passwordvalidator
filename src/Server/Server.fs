@@ -14,18 +14,27 @@ let publicPath = Path.GetFullPath "../Client/public"
 let port = "SERVER_PORT" |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
 
 let webApp = router {
+    // Returns some arbitrary information back to the caller
     get "/api/info" (fun next ctx -> task {
-        do! System.Threading.Tasks.Task.Delay(1000)
         return! json { Version = Assembly.GetCallingAssembly().ImageRuntimeVersion; Time = DateTimeOffset.UtcNow } next ctx
     })
     
+    // If the password is valid returns 200, otherwise it returns a 400 and an error message
     post "/api/save" (fun next ctx ->
         task {
             let! password = ctx.BindJsonAsync<string>()
-            let validatorResult = Validator().Validate password
-            match validatorResult with
-            | ValidPassword password -> return! Response.ok ctx "Password was saved"
-            | InvalidPassword (password, policies) -> return! Response.badRequest ctx "Password was invalid"
+
+            let hashedPassword = 
+                password
+                |> Validator().Validate 
+                |> Storage.hash
+            
+            match hashedPassword with
+            | Ok hash -> 
+                do! Storage.savePassword hash
+                return! Response.ok ctx "Password was saved"
+            | Error message -> 
+                return! Response.badRequest ctx message
         })
 }
 
