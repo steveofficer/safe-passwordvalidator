@@ -11,9 +11,9 @@ let ``app-notification-message`` dispatch = function
     | Some notification ->
         let (messageClass, message) = 
             match notification with
-            | Error e -> "is-danger", e
-            | Warning e -> "is-warning", e
-            | Message m -> "is-success", m
+            | ErrorMessage e -> "is-danger", e
+            | WarningMessage e -> "is-warning", e
+            | SuccessMessage m -> "is-success", m
         
         Notification.notification [ Notification.CustomClass messageClass ] [
             Notification.delete [ Props [ OnClick (fun _ -> dispatch HideNotification) ]] []
@@ -27,7 +27,7 @@ let ``app-policy-result`` = function
             str name
             span [ Class "icon has-text-success"] [ i [ Class "fas fa-check-square" ] [] ]
         ]
-    | { Name = name; Result = Result.Error err } ->
+    | { Name = name; Result = Error err } ->
         div [] [
             str name
             //span [ Class "icon has-text-warning"] [ i [ Class "fas fa-exclamation-triangle" ] [] ]

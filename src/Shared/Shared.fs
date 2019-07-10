@@ -50,20 +50,26 @@ type Validator() =
         | { Name = _ ; Result = Ok() } -> false 
         | { Name = _ ; Result = Error _ } -> true 
 
+    let ``minimum length rule`` length =
+        { 
+            Name = sprintf "Minimum Length of %d" length
+            IsValid = ``minimum length of`` length
+        }
+
+    let ``maximum length rule`` length =
+        { 
+            Name = sprintf "Maximum Length of %d" length
+            IsValid = ``maximum length of`` length
+        }
+
     let (|FailuresFound|AllPassed|) results = 
         if results |> List.exists ``failed policies``
         then FailuresFound results
         else AllPassed
 
     let rules = [
-        { 
-            Name = "Minimum Length of 5"
-            IsValid = ``minimum length of`` 5
-        }
-        { 
-            Name = "Maximum Length of 12"
-            IsValid = ``maximum length of`` 12
-        }
+        ``minimum length rule`` 5
+        ``maximum length rule`` 12
         {
             Name = "Has a special character"
             IsValid = ``has one of`` <| set [ '%'; '$'; '!'; '&'; '_' ]

@@ -9,9 +9,9 @@ type Model = {
     ServerInfo: ServerInfo
 }
 and Notification = 
-    | Error of string
-    | Warning of string
-    | Message of string
+    | ErrorMessage of string
+    | WarningMessage of string
+    | SuccessMessage of string
     
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events

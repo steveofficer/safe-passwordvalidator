@@ -9,6 +9,7 @@ let hash (password: Password) =
     | ValidPassword password -> 
         SHA256Managed.Create().ComputeHash(Encoding.UTF8.GetBytes password)
         |> Ok
+    
     | InvalidPassword (_, policies) -> 
         policies 
         |> List.where (fun r -> match r.Result with | Ok() -> false | Error _ -> true) 

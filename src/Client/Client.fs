@@ -34,23 +34,23 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         
         | SavePassword ->
             match currentModel.Password with
-            | None -> { currentModel with Notification = "No password has been entered" |> Warning |> Some }, Cmd.none
+            | None -> { currentModel with Notification = "No password has been entered" |> WarningMessage |> Some }, Cmd.none
             | Some password ->
                 match password with
                 | ValidPassword password -> 
                     let cmd = 
                         Cmd.OfPromise.either
                             savePassword password
-                            (fun () -> "The server accepted the password" |> Message |> ShowNotification)
-                            (fun _ -> "The server rejected the password" |> Error |> ShowNotification)
+                            (fun () -> "The server accepted the password" |> SuccessMessage |> ShowNotification)
+                            (fun _ -> "The server rejected the password" |> ErrorMessage |> ShowNotification)
                     currentModel, cmd
                 | InvalidPassword (password, _) -> 
                     //{ currentModel with Notification = "An invalid password cannot be saved" |> Warning |> Some }, Cmd.none
                     let cmd = 
                          Cmd.OfPromise.either
                              savePassword password
-                             (fun () -> "Saved" |> Message |> ShowNotification)
-                             (fun _ -> "The server rejected the password" |> Error |> ShowNotification)
+                             (fun () -> "Saved" |> SuccessMessage |> ShowNotification)
+                             (fun _ -> "The server rejected the password" |> ErrorMessage |> ShowNotification)
                     currentModel, cmd
 
         | ShowNotification notification -> { currentModel with Notification = Some notification }, Cmd.none

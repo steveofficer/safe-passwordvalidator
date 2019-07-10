@@ -33,6 +33,7 @@ let webApp = router {
             | Ok hash -> 
                 do! Storage.savePassword hash
                 return! Response.ok ctx "Password was saved"
+            
             | Error message -> 
                 return! Response.badRequest ctx message
         })
