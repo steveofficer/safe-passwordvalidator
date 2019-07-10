@@ -30,7 +30,6 @@ let ``app-policy-result`` = function
     | { Name = name; Result = Error err } ->
         div [] [
             str name
-            //span [ Class "icon has-text-warning"] [ i [ Class "fas fa-exclamation-triangle" ] [] ]
             p [ Class "tag is-warning"] [ str err ]
         ]
 
