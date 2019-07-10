@@ -12,7 +12,7 @@ let hash (password: Password) =
     
     | InvalidPassword (_, policies) -> 
         policies 
-        |> List.where (fun r -> match r.Result with | Ok() -> false | Error _ -> true) 
+        |> List.where (fun r -> not r.Result) 
         |> List.length
         |> sprintf "Password is invalid, %d policies failed."
         |> Error

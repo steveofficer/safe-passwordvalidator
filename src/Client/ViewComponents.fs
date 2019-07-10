@@ -22,16 +22,15 @@ let ``app-notification-message`` dispatch = function
 
 // This shows a single policy result
 let ``app-policy-result`` = function
-    | { Name = name; Result = Ok() } ->
+    | { Name = name; Result = true } ->
         div [] [
             str name
             span [ Class "icon has-text-success"] [ i [ Class "fas fa-check-square" ] [] ]
         ]
-    | { Name = name; Result = Error err } ->
+    | { Name = name; Result = false } ->
         div [] [
             str name
-            //span [ Class "icon has-text-warning"] [ i [ Class "fas fa-exclamation-triangle" ] [] ]
-            p [ Class "tag is-warning"] [ str err ]
+            span [ Class "icon has-text-warning"] [ i [ Class "fas fa-exclamation-triangle" ] [] ]
         ]
 
 // This shows the user the break down of which policies have been met and which have not been met

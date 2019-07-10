@@ -2,8 +2,6 @@ namespace Shared
 
 open System
 
-type ErrorMessage = string
-
 type ServerInfo = {
     Version: string
     Time: DateTimeOffset
@@ -11,7 +9,7 @@ type ServerInfo = {
 
 type Policy = {
     Name: string
-    IsValid: string -> Result<unit, ErrorMessage>
+    IsValid: string -> bool
 }
 
 type Password = 
@@ -19,36 +17,28 @@ type Password =
     | InvalidPassword of string * PolicyResult list
 and PolicyResult = {
     Name: string
-    Result: Result<unit, ErrorMessage>
+    Result: bool
 }
 
 type Validator() =
     let ``minimum length of`` length (password: string) =
-        if password.Length >= length
-        then Ok()
-        else Error (sprintf "%d is shorter than %d" password.Length length)
+        password.Length >= length
 
     let ``maximum length of`` length (password: string) = 
-        if password.Length <= length
-        then Ok()
-        else Error (sprintf "%d is longer than %d" password.Length length)
+        password.Length <= length
 
     let ``has one of`` (chars: char Set) (password: string) = 
-        if password |> Seq.exists chars.Contains
-        then Ok()
-        else Error (sprintf "Expected one of %A" chars)
+        password |> Seq.exists chars.Contains
 
     let ``does not have one of`` (chars: char Set) (password: string) = 
-        match (``has one of`` chars password) with
-        | Ok() -> Error (sprintf "Cannot contain any of %A" chars)
-        | Error _ -> Ok()
+        ``has one of`` chars password |> not
     
     let ``run against`` (password: string) (rules: Policy list) = 
         rules |> List.map (fun rule -> { Name = rule.Name; Result = rule.IsValid password })
     
     let ``failed policies`` = function 
-        | { Name = _ ; Result = Ok() } -> false 
-        | { Name = _ ; Result = Error _ } -> true 
+        | { Name = _ ; Result = true } -> false 
+        | { Name = _ ; Result = false } -> true 
 
     let ``minimum length rule`` length =
         { 
