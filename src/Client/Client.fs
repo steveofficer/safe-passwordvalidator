@@ -63,7 +63,7 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 // The elements that get displayed as well as the values are based on the applicatio's Model
 let view (model : Model) (dispatch : Msg -> unit) =
     Container.container [] [
-        ``app-notification-message`` dispatch model.Notification
+        ``app-notification-message`` {| message = model.Notification; dispatch = dispatch |}
 
         Heading.h3 [] [ str "Password Validator" ]
 
