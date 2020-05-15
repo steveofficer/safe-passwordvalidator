@@ -12,6 +12,16 @@ This means that you do not need to rewrite your business rules once in C# and on
 
 It also illustrates how F# and functional principles can be used to compose an easily maintainable and extensible set of rules that validate a domain model.
 
+
+There are 3 main branches that take the application through various stages
+
+`https://github.com/steveofficer/safe-passwordvalidator/tree/demo/boolean-results/src` shows how the code would work if policy rules just return boolean values, like you would perhaps do in a C# program.
+
+`https://github.com/steveofficer/safe-passwordvalidator/blob/master/src` shows how we can use Discriminated Unions to improve the model by allowing the policy rules to either return `unit` or return an error message. This means that when a policy fails, we not only know that it failed, but also why it failed.
+
+`https://github.com/steveofficer/safe-passwordvalidator/tree/demo/full-react` then extends the UI portion to show how to transition the UI components from F# functions to React Functional Components.
+
+
 ## Install pre-requisites
 
 You'll need to install the following pre-requisites in order to build SAFE applications
