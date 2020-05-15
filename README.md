@@ -2,12 +2,14 @@
 
 This application was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/). If you want to learn more about the template why not start with the [quick start](https://safe-stack.github.io/docs/quickstart/) guide?
 
-This project is a simple webapp that asks a user to enter a password.
-It then applies some pre-defined rules to validate whether the password complies with the "policy".
+This project is a simple webapp that asks a user to enter a password and then runs the password through a policy validator and lets the user know if they password is valid, or, which policy rules the password has not met.
+
 Any rules that fail are displayed to the user.
 
 This highlights how F# can be used to create a full stack application using ASP.NET Core as a Backend and React as a frontend, but using the same domain logic in both the front-end and the back-end.
+
 This means that you do not need to rewrite your business rules once in C# and once in TypeScript#\JavaScript.
+
 It also illustrates how F# and functional principles can be used to compose an easily maintainable and extensible set of rules that validate a domain model.
 
 ## Install pre-requisites
