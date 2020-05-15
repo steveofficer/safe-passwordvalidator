@@ -1,6 +1,14 @@
-# SAFE Template
+# SAFE Password Policy Validator
 
-This template can be used to generate a full-stack web application using the [SAFE Stack](https://safe-stack.github.io/). It was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/). If you want to learn more about the template why not start with the [quick start](https://safe-stack.github.io/docs/quickstart/) guide?
+This application was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/). If you want to learn more about the template why not start with the [quick start](https://safe-stack.github.io/docs/quickstart/) guide?
+
+This project is a simple webapp that asks a user to enter a password.
+It then applies some pre-defined rules to validate whether the password complies with the "policy".
+Any rules that fail are displayed to the user.
+
+This highlights how F# can be used to create a full stack application using ASP.NET Core as a Backend and React as a frontend, but using the same domain logic in both the front-end and the back-end.
+This means that you do not need to rewrite your business rules once in C# and once in TypeScript#\JavaScript.
+It also illustrates how F# and functional principles can be used to compose an easily maintainable and extensible set of rules that validate a domain model.
 
 ## Install pre-requisites
 
