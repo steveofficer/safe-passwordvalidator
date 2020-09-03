@@ -4,9 +4,7 @@ This project is a simple webapp that asks a user to enter a password and then ru
 
 Any rules that fail are displayed to the user.
 
-This highlights how F# can be used to create a full stack application using ASP.NET Core as a Backend and React as a frontend, but using the same domain logic in both the front-end and the back-end.
-
-This means that you do not need to rewrite your business rules once in C# and once in TypeScript#\JavaScript.
+This highlights how F# can be used to create a full stack application using ASP.NET Core as a Backend and React as a frontend, with both tiers sharing the same F# based domain logic without it needing to be rewritten.
 
 It also illustrates how F# and functional principles can be used to compose an easily maintainable and extensible set of rules that validate a domain model.
 
