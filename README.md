@@ -1,7 +1,5 @@
 # SAFE Password Policy Validator
 
-This application was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/). If you want to learn more about the template why not start with the [quick start](https://safe-stack.github.io/docs/quickstart/) guide?
-
 This project is a simple webapp that asks a user to enter a password and then runs the password through a policy validator and lets the user know if they password is valid, or, which policy rules the password has not met.
 
 Any rules that fail are displayed to the user.
@@ -23,6 +21,8 @@ There are 3 main branches that take the application through various stages
 
 
 ## Install pre-requisites
+
+This application was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/).
 
 You'll need to install the following pre-requisites in order to build SAFE applications
 
