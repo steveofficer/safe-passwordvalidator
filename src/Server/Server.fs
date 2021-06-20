@@ -1,49 +1,40 @@
-open System.IO
-
-open FSharp.Control.Tasks.V2
-open Giraffe
-open Saturn
-open Shared
+module Server
 open System
 open System.Reflection
+open Fable.Remoting.Server
+open Fable.Remoting.Giraffe
+open Saturn
 
-let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x
+open Shared
 
-let publicPath = Path.GetFullPath "../Client/public"
+let api =
+    {
+      getInfo = fun () -> async { return { Version = Assembly.GetCallingAssembly().ImageRuntimeVersion; Time = DateTimeOffset.UtcNow } }
+      save =
+        fun password -> async {
+            match Validator.validate password with
+            | ValidPassword _ ->
+                return Ok ()
 
-let port = "SERVER_PORT" |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
+            | InvalidPassword (password, policies) ->
+                let message = sprintf "%s failed %d policies" password policies.Length
+                return Error message
+        }
+    }
 
-let webApp = router {
-    // Returns some arbitrary information back to the caller
-    get "/api/info" (fun next ctx -> task {
-        return! json { Version = Assembly.GetCallingAssembly().ImageRuntimeVersion; Time = DateTimeOffset.UtcNow } next ctx
-    })
-    
-    // If the password is valid returns 200, otherwise it returns a 400 and an error message
-    post "/api/save" (fun next ctx ->
-        task {
-            let! password = ctx.BindJsonAsync<string>()
+let webApp =
+    Remoting.createApi()
+    |> Remoting.withRouteBuilder Route.builder
+    |> Remoting.fromValue api
+    |> Remoting.buildHttpHandler
 
-            let hashedPassword = 
-                password
-                |> Validator().Validate 
-                |> Storage.hash
-            
-            match hashedPassword with
-            | Ok hash -> 
-                do! Storage.savePassword hash
-                return! Response.ok ctx "Password was saved"
-            
-            | Error message -> 
-                return! Response.badRequest ctx message
-        })
-}
-
-let app = application {
-    url (sprintf "http://0.0.0.0:%d/" port)
-    use_router webApp
-    use_static publicPath
-    use_json_serializer(Thoth.Json.Giraffe.ThothSerializer())
-}
+let app =
+    application {
+        url "http://0.0.0.0:8085"
+        use_router webApp
+        memory_cache
+        use_static "public"
+        use_gzip
+    }
 
 run app

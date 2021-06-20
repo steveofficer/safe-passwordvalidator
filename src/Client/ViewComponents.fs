@@ -3,44 +3,38 @@ open Types
 open Shared
 open Fable.React
 open Fable.React.Props
-open Fulma
 
 // This shows the current notification (if there is any)
-let ``app-notification-message`` dispatch = function
+let ``notification message`` = FunctionComponent.Of(fun (props: {| dispatch: Msg -> unit; message: Notification option |}) ->
+    match props.message with
     | None -> null
     | Some notification ->
-        let (messageClass, message) = 
+        let (messageClass, message) =
             match notification with
-            | ErrorMessage e -> "is-danger", e
-            | WarningMessage e -> "is-warning", e
-            | SuccessMessage m -> "is-success", m
-        
-        Notification.notification [ Notification.CustomClass messageClass ] [
-            Notification.delete [ Props [ OnClick (fun _ -> dispatch HideNotification) ]] []
-            str message
-        ]
+            | ErrorMessage e -> "error", e
+            | WarningMessage e -> "warning", e
+            | SuccessMessage m -> "success", m
+
+        span [ classList [ messageClass, true; "notification", true ] ] [ str message ]
+)
 
 // This shows a single policy result
-let ``app-policy-result`` = function
-    | { Name = name; Result = Ok() } ->
-        div [] [
-            str name
-            span [ Class "icon has-text-success"] [ i [ Class "fas fa-check-square" ] [] ]
-        ]
-    | { Name = name; Result = Error err } ->
-        div [] [
-            str name
-            p [ Class "tag is-warning"] [ str err ]
-        ]
+let ``policy result`` =
+    FunctionComponent.Of(
+        fun (props: PolicyResult) ->
+            div [ ClassName "policy"]
+                (match props with
+                | { Name = name; Result = Ok() } ->
+                    [
+                        span [ Class "icon success"] [ i [ Class "fas fa-check-square" ] [] ]
+                        span [] [ str name ]
+                    ]
+                | { Name = name; Result = Error err } ->
+                    [
+                        span [ Class "icon danger"] [ i [ Class "fas fa-times-circle" ] [] ]
+                        span [] [ str name ]
+                        span [ Class "tag is-warning" ] [ str err ]
+                    ])
+        , withKey = (fun p -> p.Name))
 
-// This shows the user the break down of which policies have been met and which have not been met
-let ``app-password-status`` model =
-    Section.section [] [
-        (match model with
-            | None -> str "Nothing entered yet 👎"
-            | Some value ->
-                match value with
-                | ValidPassword _ -> str "That's a valid password 👍"
-                | InvalidPassword (_, policies) -> div [] [ for policy in policies -> ``app-policy-result`` policy ]
-        )
-    ]                
+let skeleton = div [ Class "skeleton" ] []
